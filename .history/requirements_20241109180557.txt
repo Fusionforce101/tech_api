@@ -60,4 +60,3 @@ redis
 gunicorn
 django-heroku
 django-storages
-whitenoise
