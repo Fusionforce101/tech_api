@@ -9,8 +9,7 @@ from .views import (
     UserDeleteView,
     PasswordResetRequestView,
     PasswordResetConfirmView,
-    PasswordResetSetNewPasswordView,
-    DiscordCallbackView
+    PasswordResetSetNewPasswordView
 )
 
 urlpatterns = [
@@ -27,7 +26,6 @@ urlpatterns = [
     
     # Connect Discord
     path('profile/connect/discord/', UserConnectDiscordView.as_view(), name='user-connect-discord'),
-    path('discord/callback/', DiscordCallbackView.as_view(), name='discord_callback'),
     
     # Delete User Account
     path('delete/', UserDeleteView.as_view(), name='user-delete'),
@@ -36,5 +34,4 @@ urlpatterns = [
     path('password-reset/request/', PasswordResetRequestView.as_view(), name='password-reset-request'),
     path('password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     path('password-reset/set/', PasswordResetSetNewPasswordView.as_view(), name='password-reset-set'),
-    
 ]

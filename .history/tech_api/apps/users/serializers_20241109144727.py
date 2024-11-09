@@ -7,8 +7,6 @@ from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ObjectDoesNotExist
 from .models import User, Profile
-from integrations.discord_integration import DiscordIntegration  # Adjust this import as necessary
-
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     """
@@ -136,31 +134,3 @@ class PasswordResetSetNewPasswordSerializer(serializers.Serializer):
         user.set_password(self.validated_data['new_password'])
         user.save()
 
-
-class DiscordConnectSerializer(serializers.Serializer):
-    code = serializers.CharField(required=True)  # This is the authorization code from Discord
-
-    def validate_code(self, value):
-        """Validate and exchange the code for a token, then retrieve user info from Discord."""
-        discord_integration = DiscordIntegration()
-        access_token = discord_integration.exchange_code_for_token(value)
-        if not access_token:
-            raise serializers.ValidationError("Invalid Discord authorization code.")
-
-        # Get Discord user info with the token
-        user_info = discord_integration.get_user_info(access_token)
-        if not user_info:
-            raise serializers.ValidationError("Could not retrieve Discord user information.")
-        
-        self.context['discord_user_info'] = user_info
-        return value
-
-    def save(self, **kwargs):
-        """Connect the Discord account to the user instance."""
-        user = self.context['request'].user
-        discord_user_info = self.context.get('discord_user_info')
-
-        user.discord_id = discord_user_info['id']
-        user.discord_username = discord_user_info['username']
-        user.save()
-        return user

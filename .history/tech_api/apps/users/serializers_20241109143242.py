@@ -7,8 +7,6 @@ from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ObjectDoesNotExist
 from .models import User, Profile
-from integrations.discord_integration import DiscordIntegration  # Adjust this import as necessary
-
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     """
@@ -85,82 +83,15 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         email = self.validated_data['email']
         user = User.objects.get(email=email)
 
-        # Generate token
+        # Generate token (this could be a default token or a custom UUID-based one)
         token = default_token_generator.make_token(user)
         
-        # Send email with the token
+        # Send email with the token (or link containing the token)
         send_mail(
             subject="Password Reset Request",
-            message=f"Use this token to confirm your identity: {token}",
+            message=f"Use this token to reset your password: {token}",
             from_email="no-reply@example.com",
             recipient_list=[email],
         )
 
         return token
-
-class PasswordResetConfirmSerializer(serializers.Serializer):
-    """
-    Serializer for confirming reset token without resetting password.
-    """
-    email = serializers.EmailField()
-    token = serializers.CharField()
-
-    def validate(self, attrs):
-        email = attrs.get('email')
-        token = attrs.get('token')
-        
-        try:
-            user = User.objects.get(email=email)
-            if not default_token_generator.check_token(user, token):
-                raise serializers.ValidationError("Invalid or expired token.")
-        except User.DoesNotExist:
-            raise serializers.ValidationError("User with this email does not exist.")
-        
-        attrs['user'] = user
-        return attrs
-    
-class PasswordResetSetNewPasswordSerializer(serializers.Serializer):
-    new_password = serializers.CharField(write_only=True)
-    confirm_password = serializers.CharField(write_only=True)
-
-    def validate(self, attrs):
-        new_password = attrs.get('new_password')
-        confirm_password = attrs.get('confirm_password')
-
-        if new_password != confirm_password:
-            raise serializers.ValidationError("Passwords do not match.")
-        
-        return attrs
-
-    def save(self, user):
-        user.set_password(self.validated_data['new_password'])
-        user.save()
-
-
-class DiscordConnectSerializer(serializers.Serializer):
-    code = serializers.CharField(required=True)  # This is the authorization code from Discord
-
-    def validate_code(self, value):
-        """Validate and exchange the code for a token, then retrieve user info from Discord."""
-        discord_integration = DiscordIntegration()
-        access_token = discord_integration.exchange_code_for_token(value)
-        if not access_token:
-            raise serializers.ValidationError("Invalid Discord authorization code.")
-
-        # Get Discord user info with the token
-        user_info = discord_integration.get_user_info(access_token)
-        if not user_info:
-            raise serializers.ValidationError("Could not retrieve Discord user information.")
-        
-        self.context['discord_user_info'] = user_info
-        return value
-
-    def save(self, **kwargs):
-        """Connect the Discord account to the user instance."""
-        user = self.context['request'].user
-        discord_user_info = self.context.get('discord_user_info')
-
-        user.discord_id = discord_user_info['id']
-        user.discord_username = discord_user_info['username']
-        user.save()
-        return user

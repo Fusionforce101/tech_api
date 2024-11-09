@@ -7,8 +7,6 @@ from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ObjectDoesNotExist
 from .models import User, Profile
-from integrations.discord_integration import DiscordIntegration  # Adjust this import as necessary
-
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     """

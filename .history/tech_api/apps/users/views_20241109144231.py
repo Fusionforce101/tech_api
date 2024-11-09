@@ -3,9 +3,6 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from .models import User, Profile
-from django.shortcuts import redirect
-from django.conf import settings
-from integrations.discord_integration import DiscordIntegration
 from .serializers import (
     UserRegisterSerializer,
     UserLoginSerializer,
@@ -13,8 +10,7 @@ from .serializers import (
     UserUpdateSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
-    PasswordResetSetNewPasswordSerializer,
-    DiscordConnectSerializer,
+
 )
 from .permissions import IsAuthenticatedAndVerified, IsOwnerOrReadOnly
 
@@ -91,25 +87,23 @@ class UserProfileUpdateView(generics.UpdateAPIView):
         return self.request.user
 
 
-class DiscordCallbackView(APIView):
+class UserConnectDiscordView(generics.UpdateAPIView):
     """
-    API view to handle the Discord OAuth2 callback.
+    API view to connect the user's Discord account.
     """
+    serializer_class = UserUpdateSerializer
     permission_classes = [IsAuthenticatedAndVerified]
 
-    def get(self, request):
-        code = request.GET.get('code')
-        if not code:
-            return Response({"message": "Authorization code not provided."}, status=status.HTTP_400_BAD_REQUEST)
+    def update(self, request, *args, **kwargs):
+        user = request.user
+        discord_id = request.data.get("discord_id")
 
-        discord_integration = DiscordIntegration()
-        access_token = discord_integration.exchange_code_for_token(code)
-        if access_token:
-            # Connect Discord account to user
-            success = discord_integration.connect_discord_account(request.user, access_token)
-            if success:
-                return Response({"message": "Discord account connected successfully."}, status=status.HTTP_200_OK)
-        return Response({"message": "Failed to connect Discord account."}, status=status.HTTP_400_BAD_REQUEST)
+        # Assuming you have some method to validate the Discord ID
+        user.discord_id = discord_id
+        user.save()
+
+        return Response({"message": "Discord account connected successfully."}, status=status.HTTP_200_OK)
+
 
 class UserDeleteView(generics.DestroyAPIView):
     """
@@ -126,59 +120,47 @@ class UserDeleteView(generics.DestroyAPIView):
         return Response({"message": "User account deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
 
-class PasswordResetRequestView(APIView):
+class PasswordResetView(generics.GenericAPIView):
     """
-    View to handle password reset token request.
+    API view to handle password reset requests.
     """
-    def post(self, request):
-        serializer = PasswordResetRequestSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "Password reset token sent to your email."}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # Assume you have a serializer for handling password resets
+    # serializer_class = PasswordResetSerializer
 
+    permission_classes = [permissions.AllowAny]
 
-class PasswordResetConfirmView(APIView):
-    """
-    View to handle password reset token validation.
-    """
-    def post(self, request):
-        serializer = PasswordResetConfirmSerializer(data=request.data)
-        if serializer.is_valid():
-            request.session['user_id'] = serializer.validated_data['user'].id  # Store user ID in session
-            return Response({"message": "Token is valid. Proceed to reset password."}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, *args, **kwargs):
+        # Logic for password reset goes here
+        return Response({"message": "Password reset link sent."}, status=status.HTTP_200_OK)
 
-
-class PasswordResetSetNewPasswordView(APIView):
+class PasswordResetRequestSerializer(serializers.Serializer):
     """
-    View to set a new password after token validation.
+    Serializer for requesting a password reset token.
     """
-    def post(self, request):
-        user_id = request.session.get('user_id')
-        if not user_id:
-            return Response({"message": "Session expired or token validation required."}, status=status.HTTP_400_BAD_REQUEST)
+    email = serializers.EmailField()
 
-        user = User.objects.get(id=user_id)
-        serializer = PasswordResetSetNewPasswordSerializer(data=request.data)
+    def validate_email(self, value):
+        try:
+            user = User.objects.get(email=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User with this email does not exist.")
+        if not user.is_active:
+            raise serializers.ValidationError("User account is inactive.")
+        return value
+
+    def save(self):
+        email = self.validated_data['email']
+        user = User.objects.get(email=email)
+
+        # Generate token
+        token = default_token_generator.make_token(user)
         
-        if serializer.is_valid():
-            serializer.save(user=user)
-            request.session.pop('user_id', None)  # Clear session after setting the password
-            return Response({"message": "Password has been reset successfully."}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Send email with the token
+        send_mail(
+            subject="Password Reset Request",
+            message=f"Use this token to confirm your identity: {token}",
+            from_email="no-reply@example.com",
+            recipient_list=[email],
+        )
 
-
-class UserConnectDiscordView(generics.UpdateAPIView):
-    """
-    API view to connect the user's Discord account.
-    """
-    serializer_class = DiscordConnectSerializer
-    permission_classes = [IsAuthenticatedAndVerified]
-
-    def update(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response({"message": "Discord account connected successfully."}, status=status.HTTP_200_OK)
+        return token

@@ -4,8 +4,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from .models import User, Profile
 from django.shortcuts import redirect
-from django.conf import settings
-from integrations.discord_integration import DiscordIntegration
 from .serializers import (
     UserRegisterSerializer,
     UserLoginSerializer,
@@ -13,8 +11,8 @@ from .serializers import (
     UserUpdateSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
-    PasswordResetSetNewPasswordSerializer,
-    DiscordConnectSerializer,
+    PasswordResetSetNewPasswordSerializer
+
 )
 from .permissions import IsAuthenticatedAndVerified, IsOwnerOrReadOnly
 
@@ -91,25 +89,23 @@ class UserProfileUpdateView(generics.UpdateAPIView):
         return self.request.user
 
 
-class DiscordCallbackView(APIView):
+class UserConnectDiscordView(generics.UpdateAPIView):
     """
-    API view to handle the Discord OAuth2 callback.
+    API view to connect the user's Discord account.
     """
+    serializer_class = UserUpdateSerializer
     permission_classes = [IsAuthenticatedAndVerified]
 
-    def get(self, request):
-        code = request.GET.get('code')
-        if not code:
-            return Response({"message": "Authorization code not provided."}, status=status.HTTP_400_BAD_REQUEST)
+    def update(self, request, *args, **kwargs):
+        user = request.user
+        discord_id = request.data.get("discord_id")
 
-        discord_integration = DiscordIntegration()
-        access_token = discord_integration.exchange_code_for_token(code)
-        if access_token:
-            # Connect Discord account to user
-            success = discord_integration.connect_discord_account(request.user, access_token)
-            if success:
-                return Response({"message": "Discord account connected successfully."}, status=status.HTTP_200_OK)
-        return Response({"message": "Failed to connect Discord account."}, status=status.HTTP_400_BAD_REQUEST)
+        # Assuming you have some method to validate the Discord ID
+        user.discord_id = discord_id
+        user.save()
+
+        return Response({"message": "Discord account connected successfully."}, status=status.HTTP_200_OK)
+
 
 class UserDeleteView(generics.DestroyAPIView):
     """
@@ -167,18 +163,3 @@ class PasswordResetSetNewPasswordView(APIView):
             request.session.pop('user_id', None)  # Clear session after setting the password
             return Response({"message": "Password has been reset successfully."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class UserConnectDiscordView(generics.UpdateAPIView):
-    """
-    API view to connect the user's Discord account.
-    """
-    serializer_class = DiscordConnectSerializer
-    permission_classes = [IsAuthenticatedAndVerified]
-
-    def update(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response({"message": "Discord account connected successfully."}, status=status.HTTP_200_OK)

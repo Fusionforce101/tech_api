@@ -13,8 +13,8 @@ from .serializers import (
     UserUpdateSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
-    PasswordResetSetNewPasswordSerializer,
-    DiscordConnectSerializer,
+    PasswordResetSetNewPasswordSerializer
+
 )
 from .permissions import IsAuthenticatedAndVerified, IsOwnerOrReadOnly
 

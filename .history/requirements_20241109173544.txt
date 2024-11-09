@@ -58,4 +58,3 @@ redis
 
 #Deployment 
 gunicorn
-django-heroku

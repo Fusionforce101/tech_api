@@ -13,8 +13,8 @@ from .serializers import (
     UserUpdateSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
-    PasswordResetSetNewPasswordSerializer,
-    DiscordConnectSerializer,
+    PasswordResetSetNewPasswordSerializer
+
 )
 from .permissions import IsAuthenticatedAndVerified, IsOwnerOrReadOnly
 
@@ -167,18 +167,3 @@ class PasswordResetSetNewPasswordView(APIView):
             request.session.pop('user_id', None)  # Clear session after setting the password
             return Response({"message": "Password has been reset successfully."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class UserConnectDiscordView(generics.UpdateAPIView):
-    """
-    API view to connect the user's Discord account.
-    """
-    serializer_class = DiscordConnectSerializer
-    permission_classes = [IsAuthenticatedAndVerified]
-
-    def update(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response({"message": "Discord account connected successfully."}, status=status.HTTP_200_OK)
