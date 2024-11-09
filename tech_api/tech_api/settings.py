@@ -13,10 +13,9 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security settings
-SECRET_KEY = config('SECRET_KEY', default='your-secret-key')
-DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
-
+SECRET_KEY = config('SECRET_KEY', default='')
+DEBUG = config('DEBUG', default=False, cast=bool)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 # Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -26,7 +25,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    'storages'
+    'storages',
 
     # Local apps
     'apps.admin_panel',
