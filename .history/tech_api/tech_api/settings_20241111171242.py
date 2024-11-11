@@ -119,7 +119,7 @@ USE_TZ = True
 # Static and media files
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -221,6 +221,3 @@ LOGGING = {
 DISCORD_CLIENT_ID = '1304800866943107143'
 DISCORD_CLIENT_SECRET = 'LUkJATS6e4KjY2KPu5fW_h92-yt1AnM0'
 DISCORD_REDIRECT_URI = 'http://localhost:8000/discord/callback/'
-
-
-django_heroku.settings(locals())
