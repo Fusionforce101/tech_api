@@ -4,18 +4,10 @@ from rest_framework.routers import DefaultRouter
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from rest_framework_simplejwt.authentication import JWTAuthentication
 
-# Import the viewsets from the respective apps
-from apps.events.views import EventViewSet, EventAttendeeViewSet, UserActivityLogViewSet
-from apps.feedback.views import FeedbackViewSet, TestimonialViewSet
-from apps.forums.views import ForumPostViewSet, ForumCommentViewSet
-from apps.hackathons.views import ChallengeViewSet, SubmissionViewSet, LeaderboardEntryViewSet
-from apps.institutions.views import InstitutionViewSet, ScholarshipViewSet, ScholarshipApplicationViewSet
-from apps.paths.views import LearningPathViewSet, TechnologyViewSet, RecommendedCourseViewSet
-from apps.users.views import UserRegisterViewSet
+from .views import EventViewSet, EventAttendeeViewSet, UserActivityLogViewSet, FeedbackViewSet, TestimonialViewSet, ForumPostViewSet, ForumCommentViewSet, ChallengeViewSet, SubmissionViewSet, LeaderboardEntryViewSet, InstitutionViewSet, ScholarshipViewSet, ScholarshipApplicationViewSet, LearningPathViewSet, TechnologyViewSet, RecommendedCourseViewSet, UserRegisterViewSet
 
-# Registering viewsets with the router
+# Registering viewsets
 router = DefaultRouter()
 router.register(r'events', EventViewSet)
 router.register(r'attendees', EventAttendeeViewSet)
@@ -47,17 +39,13 @@ schema_view = get_schema_view(
    ),
    public=True,
    permission_classes=(permissions.AllowAny,),
-   authentication_classes=[JWTAuthentication],
-   security=[{'Bearer': []}],
 )
 
 urlpatterns = [
-    path('api/', include(router.urls)),  # Your API routes
-    path('swagger/', schema_view.as_view(), name='swagger-ui'),  # Swagger documentation URL
 
-    # Include app-specific URLs
     path('api/users/', include('apps.users.urls')),
     path('api/feedback/', include('apps.feedback.urls')),
+    path('api/admin_panel/', include('apps.admin_panel.urls')),
     path('api/events/', include('apps.events.urls')),
     path('api/forums/', include('apps.forums.urls')),
     path('api/hackathons/', include('apps.hackathons.urls')),
