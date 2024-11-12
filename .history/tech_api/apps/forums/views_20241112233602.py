@@ -27,6 +27,7 @@ class PathRecommendationsView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        user = self.request.user
         interests = self.request.query_params.getlist('interests')
         skill_level = self.request.query_params.get('skill_level', None)
 
@@ -38,10 +39,6 @@ class PathRecommendationsView(generics.ListAPIView):
             queryset = queryset.filter(difficulty=skill_level)
 
         return queryset
-    
-class RecommendedCourseViewSet(viewsets.ModelViewSet):
-    queryset = RecommendedCourse.objects.all()
-    serializer_class = RecommendedCourseSerializer
 
 
 class GenerateLearningPathView(APIView):
@@ -51,9 +48,6 @@ class GenerateLearningPathView(APIView):
         goal = request.data.get('goal')
         technologies = request.data.get('technologies', [])
         duration = request.data.get('duration', None)
-
-        if not goal or not technologies:
-            return Response({"detail": "Goal and technologies are required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             response = requests.post('https://api.gemma.com/generate-path', data={
@@ -78,9 +72,6 @@ class UpdateProgressView(APIView):
         path_id = request.data.get('path_id')
         progress = request.data.get('progress')
         
-        if progress < 0 or progress > 100:
-            return Response({"detail": "Progress must be between 0 and 100"}, status=status.HTTP_400_BAD_REQUEST)
-        
         path = get_object_or_404(LearningPath, id=path_id)
         user_progress, created = UserPathProgress.objects.get_or_create(user=request.user, path=path)
         
@@ -92,19 +83,7 @@ class UpdateProgressView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class TechnologyViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet to handle CRUD operations for Technologies.
-    """
-    queryset = Technology.objects.all()
-    serializer_class = TechnologySerializer
-    permission_classes = [IsAuthenticated]
-
-
 class TechnologiesListView(generics.ListAPIView):
-    """
-    List all available technologies.
-    """
     queryset = Technology.objects.all()
     serializer_class = TechnologySerializer
     permission_classes = [IsAuthenticated]
@@ -116,9 +95,5 @@ class SelfPacedRecommendationsView(generics.ListAPIView):
 
     def get_queryset(self):
         path_id = self.request.query_params.get('path_id')
-        
-        if not path_id:
-            return Response({"detail": "path_id is required"}, status=status.HTTP_400_BAD_REQUEST)
-
         path = get_object_or_404(LearningPath, id=path_id)
         return RecommendedCourse.objects.filter(path=path)

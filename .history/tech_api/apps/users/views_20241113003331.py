@@ -1,11 +1,10 @@
 from rest_framework import generics, permissions, status, viewsets
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.views import APIView
-from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.views import APIView
 from .models import User, Profile
 from django.shortcuts import redirect
+from django.conf import settings
 from integrations.discord_integration import DiscordIntegration
 from .serializers import (
     UserRegisterSerializer,
@@ -19,39 +18,18 @@ from .serializers import (
 )
 from .permissions import IsAuthenticatedAndVerified, IsOwnerOrReadOnly
 
-class UserRegisterViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()  # Define the queryset for the viewset
-    serializer_class = UserRegisterSerializer
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+class UserRegisterViewSet(viewsets.ViewSet):
+    """
+    API view to register a new user.
+    """
+    def create(self, request):
+        serializer = UserRegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         return Response({
             "user": UserRegisterSerializer(user).data,
             "message": "User registered successfully."
-        }, status=status.HTTP_201_CREATED)
-
-class UserLoginView(generics.GenericAPIView):
-    """
-    API view to log in a user and return JWT tokens.
-    """
-    serializer_class = UserLoginSerializer
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        user = serializer.validated_data['user']
-        refresh = RefreshToken.for_user(user)
-        
-        return Response({
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-            "user": UserLoginSerializer(user).data
-        }, status=status.HTTP_200_OK)
-
-
+        })
 class UserLogoutView(generics.GenericAPIView):
     """
     API view to log out a user. JWT tokens are stateless, so no action is needed.
@@ -98,11 +76,11 @@ class DiscordCallbackView(APIView):
         discord_integration = DiscordIntegration()
         access_token = discord_integration.exchange_code_for_token(code)
         if access_token:
+            # Connect Discord account to user
             success = discord_integration.connect_discord_account(request.user, access_token)
             if success:
                 return Response({"message": "Discord account connected successfully."}, status=status.HTTP_200_OK)
         return Response({"message": "Failed to connect Discord account."}, status=status.HTTP_400_BAD_REQUEST)
-
 
 class UserDeleteView(generics.DestroyAPIView):
     """

@@ -27,21 +27,24 @@ class ForumPostViewSet(viewsets.ModelViewSet):
 # Forum Comment Views
 
 class ForumCommentViewSet(viewsets.ModelViewSet):
-    queryset = ForumComment.objects.all()  # Define the queryset here
     serializer_class = ForumCommentSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        # Get all comments for a particular forum post
         post_id = self.kwargs['post_id']
         return ForumComment.objects.filter(post_id=post_id)
 
     def perform_create(self, serializer):
+        # Create a comment for a specific post, setting the author
         post_id = self.kwargs['post_id']
         post = get_object_or_404(ForumPost, id=post_id)
         serializer.save(author=self.request.user, post=post)
 
     @action(detail=True, methods=['delete'], permission_classes=[permissions.IsAuthenticated])
     def delete_comment(self, request, pk=None):
+        # Retrieve and delete a specific comment
         comment = self.get_object()
         comment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+

@@ -1,17 +1,12 @@
-from rest_framework import generics, permissions, status, viewsets
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from .models import Feedback, Testimonial  #
-from .serializers import FeedbackSerializer, TestimonialSerializer
-
-# Feedback Views
-
-class FeedbackViewSet(viewsets.ModelViewSet):
-    queryset = Feedback.objects.all()
-    serializer_class = FeedbackSerializer
+from .models import Feedback
+from .serializers import FeedbackSerializer
 
 class SubmitFeedbackView(generics.CreateAPIView):
     """
-    Allows authenticated users to submit feedback.
+    View to submit feedback.
+    Only authenticated users can submit feedback.
     """
     queryset = Feedback.objects.all()
     serializer_class = FeedbackSerializer
@@ -19,38 +14,43 @@ class SubmitFeedbackView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         """
-        Associates feedback with the authenticated user.
+        Associate the feedback with the authenticated user upon submission.
         """
-        serializer.save(user=self.request.user)
+        serializer.save(user=self.request.user)  # Associate feedback with the user
 
 
 class ListFeedbackView(generics.ListAPIView):
     """
-    Lists all feedback for admins or feedback by the authenticated user.
+    View to list all feedback.
+    Admins can see all feedback, users can see only their own.
     """
     serializer_class = FeedbackSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         """
-        Returns feedback based on user role:
-        - Admins see all feedback.
-        - Regular users see only their own feedback.
+        Return feedback based on the user:
+        - Admins can see all feedback.
+        - Regular users can only see their own feedback.
         """
-        if self.request.user.is_staff:
+        if self.request.user.is_staff:  # Admin can see all feedback
             return Feedback.objects.all()
-        return Feedback.objects.filter(user=self.request.user)
+        else:  # Regular user can only see their own feedback
+            return Feedback.objects.filter(user=self.request.user)
 
 
 class RetrieveFeedbackView(generics.RetrieveAPIView):
     """
-    Allows users to retrieve their own feedback or for admins to retrieve any feedback.
+    View to retrieve specific feedback.
     """
     queryset = Feedback.objects.all()
     serializer_class = FeedbackSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
+        """
+        Retrieve the feedback instance for the given user.
+        """
         feedback = super().get_object()
         if feedback.user != self.request.user and not self.request.user.is_staff:
             raise permissions.PermissionDenied("You do not have permission to view this feedback.")
@@ -59,37 +59,44 @@ class RetrieveFeedbackView(generics.RetrieveAPIView):
 
 class UpdateFeedbackView(generics.UpdateAPIView):
     """
-    Allows users to update their own feedback, or for admins to update any feedback.
+    View to update specific feedback.
+    Users can only update their own feedback, admins can update any feedback.
     """
     queryset = Feedback.objects.all()
     serializer_class = FeedbackSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
+        """
+        Retrieve the feedback instance for update.
+        Ensure that the user can only update their own feedback.
+        """
         feedback = super().get_object()
         if feedback.user != self.request.user and not self.request.user.is_staff:
             raise permissions.PermissionDenied("You do not have permission to update this feedback.")
         return feedback
 
+    def perform_update(self, serializer):
+        """
+        Save the updated feedback instance.
+        """
+        serializer.save()
+
 
 class DeleteFeedbackView(generics.DestroyAPIView):
     """
-    Allows users to delete their own feedback, or for admins to delete any feedback.
+    View to delete specific feedback.
+    Users can only delete their own feedback, admins can delete any feedback.
     """
     queryset = Feedback.objects.all()
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
+        """
+        Retrieve the feedback instance for deletion.
+        Ensure that the user can only delete their own feedback.
+        """
         feedback = super().get_object()
         if feedback.user != self.request.user and not self.request.user.is_staff:
             raise permissions.PermissionDenied("You do not have permission to delete this feedback.")
         return feedback
-
-# Testimonial ViewSet
-class TestimonialViewSet(viewsets.ModelViewSet):
-    """
-    Viewset for managing testimonials.
-    """
-    queryset = Testimonial.objects.all()
-    serializer_class = TestimonialSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]

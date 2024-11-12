@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions, status, viewsets, serializers
+from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from .models import Challenge, Submission, LeaderboardEntry
@@ -7,11 +7,6 @@ from django.utils import timezone
 from rest_framework.decorators import action
 
 # Challenge Views
-class SubmissionViewSet(viewsets.ModelViewSet):
-    """ViewSet for viewing and editing submission instances."""
-    queryset = Submission.objects.all()
-    serializer_class = SubmissionSerializer
-
 
 class UpcomingChallengesView(generics.ListAPIView):
     """API endpoint to list all upcoming challenges."""
@@ -58,11 +53,6 @@ class LeaderboardView(generics.ListAPIView):
     def get_queryset(self):
         challenge_id = self.kwargs['challenge_id']
         return LeaderboardEntry.objects.filter(challenge_id=challenge_id).order_by('-score')
-    
-class LeaderboardEntryViewSet(viewsets.ModelViewSet):
-    """ViewSet for viewing and editing leaderboard entry instances."""
-    queryset = LeaderboardEntry.objects.all()
-    serializer_class = LeaderboardEntrySerializer
 
 # Custom ViewSet to allow more flexible operations for Challenges
 

@@ -1,5 +1,5 @@
 from django.urls import path
-from apps.institutions.views import (
+from .views import (
     InstitutionListView,
     InstitutionDetailView,
     RecommendedScholarshipsView,

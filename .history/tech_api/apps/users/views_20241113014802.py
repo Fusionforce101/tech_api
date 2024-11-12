@@ -19,18 +19,19 @@ from .serializers import (
 )
 from .permissions import IsAuthenticatedAndVerified, IsOwnerOrReadOnly
 
-class UserRegisterViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()  # Define the queryset for the viewset
-    serializer_class = UserRegisterSerializer
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+class UserRegisterViewSet(viewsets.ViewSet):
+    """
+    ViewSet to register a new user.
+    """
+    def create(self, request):
+        serializer = UserRegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         return Response({
             "user": UserRegisterSerializer(user).data,
             "message": "User registered successfully."
         }, status=status.HTTP_201_CREATED)
+
 
 class UserLoginView(generics.GenericAPIView):
     """

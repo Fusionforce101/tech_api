@@ -38,10 +38,6 @@ class PathRecommendationsView(generics.ListAPIView):
             queryset = queryset.filter(difficulty=skill_level)
 
         return queryset
-    
-class RecommendedCourseViewSet(viewsets.ModelViewSet):
-    queryset = RecommendedCourse.objects.all()
-    serializer_class = RecommendedCourseSerializer
 
 
 class GenerateLearningPathView(APIView):

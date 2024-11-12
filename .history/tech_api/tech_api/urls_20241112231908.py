@@ -45,6 +45,7 @@ schema_view = get_schema_view(
    public=True,
    permission_classes=(permissions.AllowAny,),
    authentication_classes=[JWTAuthentication],
+   security=[{'Bearer': []}],
 )
 
 urlpatterns = [
@@ -58,5 +59,4 @@ urlpatterns = [
     path('api/forums/', include('apps.forums.urls')),
     path('api/hackathons/', include('apps.hackathons.urls')),
     path('api/paths/', include('apps.paths.urls')),
-    path('api/institutions/', include('apps.institutions.urls')),
 ]

@@ -13,12 +13,10 @@ class ForumPostViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        # Automatically set the user as the author of the post
         serializer.save(author=self.request.user)
 
     @action(detail=True, methods=['delete'], permission_classes=[permissions.IsAuthenticated])
     def delete_post(self, request, pk=None):
-        # Delete the post instance and return HTTP 204
         post = self.get_object()
         post.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -27,7 +25,6 @@ class ForumPostViewSet(viewsets.ModelViewSet):
 # Forum Comment Views
 
 class ForumCommentViewSet(viewsets.ModelViewSet):
-    queryset = ForumComment.objects.all()  # Define the queryset here
     serializer_class = ForumCommentSerializer
     permission_classes = [permissions.IsAuthenticated]
 

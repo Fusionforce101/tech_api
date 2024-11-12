@@ -4,11 +4,6 @@ from .models import Feedback, Testimonial  #
 from .serializers import FeedbackSerializer, TestimonialSerializer
 
 # Feedback Views
-
-class FeedbackViewSet(viewsets.ModelViewSet):
-    queryset = Feedback.objects.all()
-    serializer_class = FeedbackSerializer
-
 class SubmitFeedbackView(generics.CreateAPIView):
     """
     Allows authenticated users to submit feedback.

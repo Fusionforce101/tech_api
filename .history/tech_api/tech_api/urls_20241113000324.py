@@ -13,7 +13,7 @@ from apps.forums.views import ForumPostViewSet, ForumCommentViewSet
 from apps.hackathons.views import ChallengeViewSet, SubmissionViewSet, LeaderboardEntryViewSet
 from apps.institutions.views import InstitutionListView, InstitutionDetailView, RecommendedScholarshipsView, ScholarshipApplicationView, ApplicationStatusView
 from apps.paths.views import LearningPathViewSet, TechnologyViewSet, RecommendedCourseViewSet
-from apps.users.views import UserRegisterViewSet
+from apps.users.views import UserRegisterView
 
 # Registering viewsets with the router
 router = DefaultRouter()
@@ -30,7 +30,7 @@ router.register(r'leaderboard', LeaderboardEntryViewSet)
 router.register(r'learning-paths', LearningPathViewSet)
 router.register(r'technologies', TechnologyViewSet)
 router.register(r'recommended-courses', RecommendedCourseViewSet)
-router.register(r'register', UserRegisterViewSet)
+router.register(r'register', UserRegisterView)
 
 # Swagger schema view setup
 schema_view = get_schema_view(
@@ -45,6 +45,7 @@ schema_view = get_schema_view(
    public=True,
    permission_classes=(permissions.AllowAny,),
    authentication_classes=[JWTAuthentication],
+   security=[{'Bearer': []}],
 )
 
 urlpatterns = [

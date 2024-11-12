@@ -6,7 +6,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-# Import the viewsets or views from the respective apps
+# Import the viewsets from the respective apps
 from apps.events.views import EventViewSet, EventAttendeeViewSet, UserActivityLogViewSet
 from apps.feedback.views import FeedbackViewSet, TestimonialViewSet
 from apps.forums.views import ForumPostViewSet, ForumCommentViewSet
@@ -27,6 +27,9 @@ router.register(r'forum-comments', ForumCommentViewSet)
 router.register(r'challenge', ChallengeViewSet)
 router.register(r'submissions', SubmissionViewSet)
 router.register(r'leaderboard', LeaderboardEntryViewSet)
+router.register(r'institutions', InstitutionViewSet)
+router.register(r'scholarships', ScholarshipViewSet)
+router.register(r'scholarship-applications', ScholarshipApplicationViewSet)
 router.register(r'learning-paths', LearningPathViewSet)
 router.register(r'technologies', TechnologyViewSet)
 router.register(r'recommended-courses', RecommendedCourseViewSet)
@@ -45,18 +48,19 @@ schema_view = get_schema_view(
    public=True,
    permission_classes=(permissions.AllowAny,),
    authentication_classes=[JWTAuthentication],
+   security=[{'Bearer': []}],
 )
 
 urlpatterns = [
     path('api/', include(router.urls)),  # Your API routes
     path('swagger/', schema_view.as_view(), name='swagger-ui'),  # Swagger documentation URL
 
-    # Include app-specific URLs if additional URLs exist
+    # Include app-specific URLs
     path('api/users/', include('apps.users.urls')),
     path('api/feedback/', include('apps.feedback.urls')),
     path('api/events/', include('apps.events.urls')),
     path('api/forums/', include('apps.forums.urls')),
     path('api/hackathons/', include('apps.hackathons.urls')),
-    path('api/paths/', include('apps.paths.urls')),
     path('api/institutions/', include('apps.institutions.urls')),
+    path('api/paths/', include('apps.paths.urls')),
 ]
