@@ -17,10 +17,8 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
-urlpatterns = [
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
+urlpatterns = [
     path('api/users/', include('apps.users.urls')),
     path('api/feedback/', include('apps.feedback.urls')),
     path('api/admin_panel/', include('apps.admin_panel.urls')),
