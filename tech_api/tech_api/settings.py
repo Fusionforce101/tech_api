@@ -14,9 +14,9 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security settings
-SECRET_KEY = config('SECRET_KEY', default='')
+SECRET_KEY = config('SECRET_KEY', default='q16jdu+ox#vp4l#hqjzje-b!m=ysqtc4jk(kd=*2pts&bist(6')
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 # Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -88,13 +88,24 @@ TEMPLATES = [
 WSGI_APPLICATION = "tech_api.wsgi.application"
 
 # Database configuration
+"""
 DATABASES = {
     'default': dj_database_url.config(
         default=config('DATABASE_URL', default='postgres://FusionForce:Mark@localhost:5432/FutureFemTech')
     )
 }
+"""
 
-
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'd7qu49risd8eb',
+        'USER': 'udtrdtb0258tgf',
+        'PASSWORD': 'pde74d6e4e40714b99d071bbd761189a094bd3c7f7fbe18e753b95982ae0ebdd2',
+        'HOST': 'c8m0261h0c7idk.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com',
+        'PORT': '5432',
+    }
+} 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -182,12 +193,12 @@ CACHES = {
 }
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config('EMAIL_HOST')
-EMAIL_PORT = config('EMAIL_PORT', cast=int)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')  # Default host for Gmail
+EMAIL_PORT = config('EMAIL_PORT', cast=int, default=587)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool, default=True)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', cast=bool, default=False)  # Optional, if you use SSL
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='sarunimark06@gmail.com')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='78Mark_$65')
 
 # Crispy forms configuration
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
