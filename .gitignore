@@ -16,7 +16,7 @@ venv/
 *.pdb
 local_settings.py
 media/
-staticfiles/
+/staticfiles/
 
 # IDE specific
 .vscode/
